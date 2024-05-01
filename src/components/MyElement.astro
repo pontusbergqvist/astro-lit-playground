@@ -1,0 +1,70 @@
+---
+interface Props {
+  items: string[];
+}
+
+const { items } = Astro.props;
+---
+
+<my-element data-items={items}>
+  <template shadowrootmode="open">
+    <ul id="items-holder">
+      {items.map((item) => <li>{item}</li>)}
+    </ul>
+    <button id="button">Increment items</button>
+    <p id="counter-holder">Item count: {items.length}</p>
+  </template>
+</my-element>
+
+<script>
+  class MyElement extends HTMLElement {
+    public constructor() {
+      super();
+      this.renderItems = this.renderItems.bind(this);
+    }
+
+    protected connectedCallback() {
+      this.button?.addEventListener("click", () => {
+        this.increment();
+      });
+
+      this.render();
+    }
+
+    private _items = this.dataset.items ? this.dataset.items.split(",") : [];
+
+    get button() {
+      return this.shadow.getElementById("button");
+    }
+
+    get itemsEl() {
+      return this.shadow.getElementById("items-holder") as HTMLElement;
+    }
+
+    get counter() {
+      return this.shadow.getElementById("counter-holder") as HTMLElement;
+    }
+
+    get shadow() {
+      return this.shadowRoot as ShadowRoot;
+    }
+
+    private increment() {
+      this._items = [...this._items, `Item ${this._items.length + 1}`];
+      this.renderItems();
+    }
+
+    private renderItems() {
+      this.itemsEl.innerHTML = this._items
+        .map((item) => `<li>${item}</li>`)
+        .reduce((a, b) => a + b, "");
+      this.counter.innerText = `Item count: ${this._items.length.toString()}`;
+    }
+
+    private render() {
+      this.renderItems();
+    }
+  }
+
+  customElements.define("my-element", MyElement);
+</script>
